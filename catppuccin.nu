@@ -122,11 +122,35 @@ export def main [flavor: string = "mocha"] {
         leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
         header: $palette.subtext0
         empty: $palette.red
-        bool: $palette.peach
+        bool: {|b| if $b { $palette.green } else { $palette.red }}
         int: $palette.text
-        filesize: $palette.teal
+        filesize: {|size|
+            if $size < 1mb {
+                $palette.green
+            } else if $size < 100mb {
+                $palette.yellow
+            } else if $size < 500mb {
+                $palette.peach
+            } else if $size < 800mb {
+                $palette.maroon
+            } else if $size > 800mb {
+                $palette.red
+            }
+        }
         duration: $palette.text
-        date: {|| $in | evalDate $palette }
+        date: {|| (date now) - $in |
+            if $in < 1hr {
+                $palette.green
+            } else if $in < 1day {
+                $palette.yellow
+            } else if $in < 3day {
+                $palette.peach
+            } else if $in < 1wk {
+                $palette.maroon
+            } else if $in > 1wk {
+                $palette.red
+            }
+        }       
         range: $palette.text
         float: $palette.maroon
         string: $palette.green
@@ -153,7 +177,7 @@ export def main [flavor: string = "mocha"] {
         shape_filepath: $palette.lavender
         shape_flag: $palette.peach
         shape_float: $palette.peach
-        shape_garbage: { fg: $palette.crust bg: $palette.red }
+        shape_garbage: { fg: $palette.red attr: 'u' }
         shape_glob_interpolation: $palette.teal
         shape_globpattern: $palette.teal
         shape_int: $palette.peach
@@ -180,29 +204,3 @@ export def main [flavor: string = "mocha"] {
     }
 }
 
-
-def evalDate [palette: record] datetime -> string {
-    match ($in | untilNow) {
-        $dur if ($dur | durationBetween 0sec 1min) => $palette.sapphire,
-        $dur if ($dur | durationBetween 1min 5min) => $palette.blue,
-        $dur if ($dur | durationBetween 5min 1hr) => $palette.lavender,
-        $dur if ($dur | durationBetween 1hr 8hr) => $palette.text,
-        $dur if ($dur | durationBetween 8hr 16hr) => $palette.subtext1,
-        $dur if ($dur | durationBetween 16hr 1day) => $palette.subtext0,
-        $dur if ($dur | durationBetween 1day 5day) => $palette.overlay2,
-        $dur if ($dur | durationBetween 5day 1wk) => $palette.overlay1,
-        _ => $palette.overlay0
-    }
-}
-
-def untilNow [date?: datetime] datetime -> duration {
-    if $date == null {
-        (date now) - $in
-    } else {
-        (date now) - $date
-    }
-}
-
-def durationBetween [start: duration, end: duration] duration -> boolean {
-    $in > $start and $in < $end
-}
