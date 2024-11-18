@@ -18,7 +18,7 @@ export def main [flavor: string = "mocha"] {
     let palette = ($palettes | get $flavor)
     {
         # color for nushell primitives
-        separator: $palette.text
+        separator: $palette.overlay0
         leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
         header: $palette.subtext0
         empty: $palette.red
